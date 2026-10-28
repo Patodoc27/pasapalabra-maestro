@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<!-- Pasapalabra Maestro — panel de la docente · © 2026 Patricia Inés Castro, Salta, Argentina.
+     Crea y administra pasapalabras por materia y curso. -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pasapalabra Maestro — Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo0:#E8EDF8;--fondo1:#F8F9FD;
+  --au1:rgba(38,110,214,.15);--au2:rgba(255,158,74,.14);--au3:rgba(109,91,208,.12);
+  --dots:rgba(43,73,140,.12);
+  --carta:#FFFFFF;--carta2:#F3F5FC;
+  --borde:rgba(43,73,140,.18);--borde2:rgba(43,73,140,.38);
+  --tinta:#16213F;--suave:#3F537D;--gris:#5E708F;--tenue:#8294B4;
+  --superficie:rgba(23,53,120,.06);--superficie2:rgba(23,53,120,.045);
+  --marca:#0062D6;--turquesa:#0A9E96;--parina:#E01480;--uva:#2446C8;--sol:#7C9BE8;
+  --ok:#0E9E6E;--warn:#C2680A;--malo:#C23535;
+  --sombra:0 24px 55px -26px rgba(23,43,99,.32);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--fondo0);color:var(--tinta);font-family:"Nunito",system-ui,sans-serif;min-height:100dvh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-18%;z-index:-2;pointer-events:none;
+  background:radial-gradient(40vw 32vw at 8% 4%,var(--au1),transparent 60%),
+    radial-gradient(36vw 32vw at 92% 10%,var(--au2),transparent 62%),
+    radial-gradient(44vw 36vw at 50% 112%,var(--au3),transparent 62%),
+    linear-gradient(180deg,var(--fondo1),var(--fondo0))}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(var(--dots) 1.2px,transparent 1.8px);background-size:34px 34px}
+h1,h2,h3,.baloo{font-family:"Baloo 2","Nunito",sans-serif}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--tinta)}
+a{color:var(--marca)}
+.ic{width:16px;height:16px;display:inline-block;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===== LOGIN ===== */
+#login{max-width:430px;margin:8vh auto 0;background:var(--carta);border:1px solid var(--borde);border-radius:26px;box-shadow:var(--sombra);padding:38px 34px}
+#login h1{font-size:26px;margin-bottom:4px}
+#login p{color:var(--gris);font-size:14.5px;margin-bottom:20px}
+.campo{margin-bottom:14px}
+.campo>label{display:block;font-weight:800;font-size:12.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--gris);margin-bottom:6px}
+.in,select.in,textarea.in{width:100%;border:1.6px solid var(--borde2);border-radius:13px;background:#fff;padding:11px 14px;outline:none;transition:border-color .15s}
+.in:focus{border-color:var(--marca);box-shadow:0 0 0 3px rgba(0,98,214,.13)}
+textarea.in{resize:vertical;min-height:90px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:14px;padding:11px 20px;
+  font-weight:800;font-size:15px;background:var(--marca);color:#fff;transition:filter .15s,transform .1s}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.98)}
+.btn.tur{background:var(--turquesa)}.btn.par{background:var(--parina)}.btn.uva{background:var(--uva)}
+.btn.suave{background:var(--superficie);color:var(--tinta);border:1.5px solid var(--borde2)}
+.btn.peligro{background:#fff;color:var(--malo);border:1.5px solid var(--malo)}
+.btn.mini{padding:7px 13px;font-size:13.5px;border-radius:11px}
+.btn[disabled]{opacity:.55;cursor:wait}
+
+/* ===== ESTRUCTURA ===== */
+#app{max-width:1500px;margin:0 auto;padding:18px clamp(12px,2vw,28px) 60px}
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Baloo 2";font-weight:800;font-size:22px}
+.logo .fichas span{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;color:#fff;font-size:14px;margin-right:2px}
+.top .der{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--gris)}
+.grid{display:grid;gap:18px}
+@media(min-width:1060px){.grid{grid-template-columns:300px 1fr;align-items:start}}
+
+/* ===== SIDEBAR ===== */
+#arbol{background:var(--carta);border:1px solid var(--borde);border-radius:20px;box-shadow:var(--sombra);padding:14px;position:sticky;top:16px;max-height:calc(100dvh - 40px);overflow:auto}
+#arbol h2{font-size:15px;color:var(--gris);text-transform:uppercase;letter-spacing:.7px;padding:4px 8px 10px}
+.nodo{border-radius:13px}
+.nodo>.fila{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:13px;font-weight:700}
+.nodo.materia>.fila{background:var(--superficie2)}
+.nodo.curso>.fila{margin-left:14px;color:var(--suave)}
+.nodo.juego>.fila{margin-left:26px;font-weight:600;font-size:14px;color:var(--gris);cursor:pointer}
+.nodo.juego>.fila:hover{background:var(--superficie)}
+.nodo.juego>.fila.sel{background:rgba(0,98,214,.1);color:var(--marca)}
+.nodo .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nodo .mini-acts{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.nodo>.fila:hover .mini-acts{opacity:1}
+.ibtn{border:none;background:none;color:var(--tenue);padding:4px;border-radius:8px}
+.ibtn:hover{color:var(--marca);background:var(--superficie)}
+.ibtn.del:hover{color:var(--malo)}
+.estado{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.estado.abierto{background:var(--ok)}.estado.cerrado{background:var(--malo)}.estado.noabrio{background:var(--warn)}.estado.off{background:#B9C2D8}
+.add-linea{margin:8px 0 0 26px}
+.flecha{transition:transform .18s;color:var(--tenue)}
+.nodo.cerrado>.fila .flecha{transform:rotate(-90deg)}
+.nodo.cerrado>.hijos{display:none}
+
+/* ===== CONTENIDO ===== */
+#vista{min-width:0}
+.vacio{background:var(--carta);border:1.5px dashed var(--borde2);border-radius:20px;padding:70px 30px;text-align:center;color:var(--gris)}
+.vacio h2{font-size:24px;color:var(--tinta);margin-bottom:8px}
+.panel{background:var(--carta);border:1px solid var(--borde);border-radius:20px;box-shadow:var(--sombra);padding:clamp(18px,2.4vw,30px)}
+.cab-juego{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.cab-juego h1{font-size:clamp(22px,2.4vw,30px);line-height:1.15}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--borde2);border-radius:999px;padding:5px 13px;font-weight:700;font-size:13px;color:var(--suave);background:#fff}
+.chip.punto{padding-left:9px}
+.url-box{display:flex;align-items:center;gap:10px;background:var(--superficie2);border:1px solid var(--borde);border-radius:13px;padding:9px 14px;font-size:14px;margin:12px 0 18px;overflow:hidden}
+.url-box code{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--uva);font-weight:700}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1.5px solid var(--borde);margin-bottom:22px}
+.tab{border:none;background:none;padding:10px 16px;font-weight:800;font-size:15px;color:var(--gris);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tab.sel{color:var(--marca);border-bottom-color:var(--marca)}
+.tab .cont{background:var(--superficie);border-radius:99px;padding:1px 8px;font-size:12px;margin-left:5px}
+
+.fila2{display:grid;gap:14px}
+@media(min-width:760px){.fila2{grid-template-columns:1fr 1fr}}
+.fila3{display:grid;gap:14px}
+@media(min-width:760px){.fila3{grid-template-columns:1fr 1fr 1fr}}
+.sector{border:1px solid var(--borde);border-radius:16px;padding:16px;margin-bottom:14px;background:var(--carta2)}
+.sector>legend,.sector>h3{font-family:"Baloo 2";font-size:16px;padding:0 6px;color:var(--suave)}
+.sector h3{margin-bottom:10px}
+.ayuda{font-size:13px;color:var(--gris);margin-top:6px}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.check{display:inline-flex;align-items:center;gap:8px;border:1.6px solid var(--borde2);border-radius:12px;padding:8px 13px;font-weight:700;font-size:14px;background:#fff;cursor:pointer;user-select:none}
+.check input{accent-color:var(--marca);width:17px;height:17px}
+.check.on{border-color:var(--marca);background:rgba(0,98,214,.07);color:var(--marca)}
+.dev{display:flex;gap:12px}
+.dev label{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;border:2px solid var(--borde2);border-radius:16px;padding:14px;cursor:pointer;background:#fff;text-align:center;transition:border-color .15s}
+.dev label.on{border-color:var(--marca);box-shadow:0 0 0 3px rgba(0,98,214,.12)}
+.dev b{font-size:15px}.dev span{font-size:12.5px;color:var(--gris)}
+.avs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.avb{border:2px solid var(--borde2);border-radius:16px;padding:10px;background:#fff;cursor:pointer;transition:border-color .15s}
+.avb.on{border-color:var(--parina);box-shadow:0 0 0 3px rgba(224,20,128,.12)}
+.avb .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.avb .mini img{width:100%;border-radius:50%;background:var(--superficie)}
+.avb b{display:block;font-size:13.5px}.avb span{font-size:12px;color:var(--parina);font-weight:800}
+
+/* ===== PALABRAS ===== */
+.pal-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.letras{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.letra{border:1.5px solid var(--borde);border-radius:15px;background:#fff;overflow:hidden}
+.letra.vacia{opacity:.75;border-style:dashed}
+.letra>.cab{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--superficie2)}
+.letra .L{font-family:"Baloo 2";font-weight:800;font-size:19px;color:var(--marca);width:24px}
+.letra .cnt{font-size:12px;color:var(--gris);font-weight:700}
+.letra .cab .ibtn{margin-left:auto}
+.pal{padding:8px 10px;border-top:1px solid var(--superficie)}
+.pal .f1{display:flex;gap:6px;align-items:center}
+.pal input[type=text]{flex:1;min-width:0;border:1.4px solid var(--borde);border-radius:9px;padding:6px 9px;font-size:14px;font-weight:700}
+.pal select{border:1.4px solid var(--borde);border-radius:9px;padding:6px 5px;font-size:12.5px;font-weight:700;color:var(--suave)}
+.pal .f2{display:flex;gap:6px;margin-top:6px}
+.pal .f2 input{flex:1;min-width:0;border:1.4px solid var(--borde);border-radius:9px;padding:6px 9px;font-size:13px}
+.pal textarea{width:100%;border:1.4px solid var(--borde);border-radius:9px;padding:6px 9px;font-size:13px;margin-top:6px;resize:vertical;min-height:34px}
+.pal.del{background:#FFF3F3}
+.aviso{display:flex;gap:9px;align-items:flex-start;border-radius:12px;padding:10px 13px;font-size:13.5px;margin-bottom:12px}
+.aviso[hidden]{display:none}
+.aviso.warn{background:#FFF6E8;border:1px solid #EBC98E;color:#8A5410}
+.aviso.mal{background:#FDECEC;border:1px solid #EFB3B3;color:#8E2B2B}
+.aviso.bien{background:#E9F7F0;border:1px solid #A9DFC7;color:#0F6848}
+
+/* ===== PARTICIPACIÓN ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--superficie2);border:1px solid var(--borde);border-radius:15px;padding:14px}
+.stat b{display:block;font-family:"Baloo 2";font-size:26px;color:var(--marca)}
+.stat span{font-size:12.5px;color:var(--gris);font-weight:700}
+table.tabla{width:100%;border-collapse:collapse;font-size:14px}
+.tabla th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--gris);padding:8px 10px;border-bottom:2px solid var(--borde)}
+.tabla td{padding:8px 10px;border-bottom:1px solid var(--superficie)}
+.tabla tr:hover td{background:var(--superficie2)}
+.tabla .avt{width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:7px}
+.pos{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;font-weight:800;font-size:12.5px;background:var(--superficie);color:var(--suave)}
+.pos.p1{background:#FBE3A0;color:#8A5B00}.pos.p2{background:#E2E6F2;color:#4A5E8E}.pos.p3{background:#F3D9C0;color:#8A4B10}
+
+/* ===== MODAL ===== */
+#modal{position:fixed;inset:0;background:rgba(22,33,63,.45);display:none;place-items:center;z-index:50;padding:18px}
+#modal.abierto{display:grid}
+#modal .caja{background:#fff;border-radius:20px;box-shadow:var(--sombra);width:min(560px,100%);max-height:88dvh;overflow:auto;padding:26px}
+#modal h2{font-size:20px;margin-bottom:14px}
+#modal .acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#16213F;color:#fff;padding:12px 22px;border-radius:14px;font-weight:700;font-size:14.5px;box-shadow:0 12px 30px -8px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.espera{position:fixed;inset:0;background:rgba(248,249,253,.7);display:none;place-items:center;z-index:55;font-family:"Baloo 2";font-size:19px;color:var(--suave)}
+.espera.on{display:grid}
+@media(max-width:1059px){#arbol{position:static;max-height:none}}
+</style>
+</head>
+<body>
+
+<div id="login" hidden>
+  <div class="logo" style="margin-bottom:14px">
+    <span class="fichas"><span style="background:var(--turquesa)">P</span><span style="background:var(--parina)">A</span><span style="background:var(--uva)">S</span><span style="background:var(--marca)">A</span></span>
+    Pasapalabra Maestro
+  </div>
+  <p>Panel de la docente: entrá con tu usuario para crear y administrar los pasapalabras de tus cursos.</p>
+  <div class="campo"><label for="l-email">Correo</label><input class="in" id="l-email" type="email" autocomplete="username"></div>
+  <div class="campo"><label for="l-pass">Contraseña</label><input class="in" id="l-pass" type="password" autocomplete="current-password"></div>
+  <div class="aviso mal" id="l-err" hidden></div>
+  <button class="btn" id="l-btn" style="width:100%;justify-content:center">Entrar</button>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="logo"><span class="fichas"><span style="background:var(--turquesa)">P</span><span style="background:var(--parina)">A</span><span style="background:var(--uva)">S</span><span style="background:var(--marca)">A</span></span> Pasapalabra Maestro</div>
+    <div class="der"><span id="quien"></span><button class="btn suave mini" id="btn-salir">Salir</button></div>
+  </header>
+  <div class="grid">
+    <aside id="arbol"></aside>
+    <main id="vista"></main>
+  </div>
+</div>
+
+<div id="modal"></div>
+<div class="espera" id="espera"><div>Un momento…</div></div>
+<div id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/avatares.js"></script>
+<script>
+"use strict";
+/* ============ utilidades ============ */
+function $(s, r) { return (r || document).querySelector(s); }
+function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function slugDe(t) {
+  return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/ñ/g, "n").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "pasapalabra";
+}
+function toast(t) { var e = $("#toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(function () { e.classList.remove("on"); }, 2600); }
+function espera(on) { $("#espera").classList.toggle("on", !!on); }
+function errMsg(e) { return (e && e.message) ? e.message : String(e); }
+var ICO = {
+  lapiz: '<svg class="ic" viewBox="0 0 24 24"><path d="M17 3l4 4L8 20l-5 1 1-5z"/></svg>',
+  tacho: '<svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>',
+  mas: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  copiar: '<svg class="ic" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  descarga: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>',
+  flecha: '<svg class="ic flecha" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg>',
+  link: '<svg class="ic" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7L12.5 19"/></svg>'
+};
+var LETRAS = ["A","B","C","D","E","F","G","H","I","J","L","M","N","Ñ","O","P","Q","R","S","T","U","V","X","Y"];
+var TIEMPOS = [[0, "Sin reloj"], [90, "1:30"], [120, "2 min"], [180, "3 min"], [240, "4 min"], [360, "6 min"], [480, "8 min"], [600, "10 min"]];
+var MODOS_PC = [["linea", "1 contra 1 en línea"], ["dedos", "De a dos (misma compu)"], ["boti", "Contra Boti"]];
+var MODOS_MOV = [["linea", "1 contra 1 en línea"], ["sola", "Sola (a su ritmo)"], ["boti", "Contra Boti"]];
+
+/* ============ estado ============ */
+var S = { materias: [], juego: null, palabras: [], palabrasBorradas: [], tab: "config", abiertos: {}, partidas: null };
+
+function estadoDe(j) {
+  if (!j.activo) return "off";
+  var ahora = new Date();
+  if (j.abre_en && ahora < new Date(j.abre_en)) return "noabrio";
+  if (j.cierra_en && ahora > new Date(j.cierra_en)) return "cerrado";
+  return "abierto";
+}
+var EST_TXT = { abierto: "Abierto", cerrado: "Cerrado", noabrio: "Aún no abre", off: "Pausado" };
+var EST_PTO = { abierto: "abierto", cerrado: "cerrado", noabrio: "noabrio", off: "off" };
+
+function urlJuego(j) { return location.origin + location.pathname.replace(/admin\.html$/, "") + "?j=" + j.slug; }
+
+/* ============ datos ============ */
+function cargarArbol() {
+  return PPDB.sel("pp_materias",
+    "select=id,nombre,cursos:pp_cursos(id,nombre,colegio,materia_id,juegos:pp_juegos(id,slug,titulo,dispositivo,activo,chat,cierra_en,abre_en))&order=nombre")
+    .then(function (ms) {
+      (ms || []).forEach(function (m) {
+        (m.cursos || []).sort(function (a, b) { return String(a.nombre).localeCompare(String(b.nombre)); });
+        m.cursos.forEach(function (c) { (c.juegos || []).sort(function (a, b) { return String(a.titulo).localeCompare(String(b.titulo)); }); });
+      });
+      S.materias = ms || [];
+    });
+}
+function cargarJuego(id) {
+  return PPDB.sel("pp_juegos", "select=*,palabras:pp_palabras(*)&id=eq." + id).then(function (rs) {
+    S.juego = rs && rs[0] ? rs[0] : null;
+    S.palabras = (S.juego && S.juego.palabras) || [];
+    S.palabras.forEach(function (p) { p._id = p.id; });
+    S.palabrasBorradas = [];
+    S.partidas = null;
+  });
+}
+
+/* ============ render: árbol ============ */
+function pintarArbol() {
+  var h = "<h2>Mis pasapalabras</h2>";
+  S.materias.forEach(function (m) {
+    var abierto = S.abiertos["m" + m.id] !== false;
+    h += '<div class="nodo materia' + (abierto ? "" : " cerrado") + '" data-m="' + m.id + '">'
+      + '<div class="fila"><span data-tog="1">' + ICO.flecha + '</span><span class="nom" data-tog="1">' + esc(m.nombre) + '</span>'
+      + '<span class="mini-acts"><button class="ibtn" data-mas-curso="' + m.id + '" title="Nuevo curso">' + ICO.mas + '</button>'
+      + '<button class="ibtn" data-ed-materia="' + m.id + '" title="Renombrar">' + ICO.lapiz + '</button>'
+      + '<button class="ibtn del" data-del-materia="' + m.id + '" title="Borrar">' + ICO.tacho + '</button></span></div><div class="hijos">';
+    (m.cursos || []).forEach(function (c) {
+      var cab = S.abiertos["c" + c.id] !== false;
+      h += '<div class="nodo curso' + (cab ? "" : " cerrado") + '" data-c="' + c.id + '">'
+        + '<div class="fila"><span data-tog="1">' + ICO.flecha + '</span><span class="nom" data-tog="1">' + esc(c.nombre) + (c.colegio ? " · " + esc(c.colegio) : "") + '</span>'
+        + '<span class="mini-acts"><button class="ibtn" data-mas-juego="' + c.id + '" title="Nuevo pasapalabra">' + ICO.mas + '</button>'
+        + '<button class="ibtn" data-ed-curso="' + c.id + '" title="Editar">' + ICO.lapiz + '</button>'
+        + '<button class="ibtn del" data-del-curso="' + c.id + '" title="Borrar">' + ICO.tacho + '</button></span></div><div class="hijos">';
+      (c.juegos || []).forEach(function (j) {
+        var est = estadoDe(j);
+        h += '<div class="nodo juego"><div class="fila' + (S.juego && S.juego.id === j.id ? " sel" : "") + '" data-juego="' + j.id + '">'
+          + '<span class="estado ' + EST_PTO[est] + '"></span><span class="nom">' + esc(j.titulo) + '</span></div></div>';
+      });
+      h += '<button class="btn suave mini add-linea" data-mas-juego="' + c.id + '">' + ICO.mas + ' Pasapalabra</button></div></div>';
+    });
+    h += '<button class="btn suave mini add-linea" style="margin-left:14px" data-mas-curso="' + m.id + '">' + ICO.mas + ' Curso</button></div></div>';
+  });
+  h += '<div style="padding:12px 4px 4px"><button class="btn tur mini" id="mas-materia">' + ICO.mas + ' Nueva materia</button></div>';
+  $("#arbol").innerHTML = h;
+}
+
+/* ============ render: vista ============ */
+function pintarVista() {
+  var v = $("#vista");
+  if (!S.juego) {
+    v.innerHTML = '<div class="vacio"><h2>Creá tu primer pasapalabra</h2>'
+      + '<p>Elegí una materia y un curso en la izquierda (o creá nuevos),<br>después tocá <b>+ Pasapalabra</b> para armar el juego con sus palabras, tiempos y avatares.</p></div>';
+    return;
+  }
+  var j = S.juego, est = estadoDe(j);
+  var h = '<div class="panel"><div class="cab-juego"><div style="flex:1;min-width:240px"><h1>' + esc(j.titulo) + '</h1>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+    + '<span class="chip punto"><span class="estado ' + EST_PTO[est] + '"></span>' + EST_TXT[est] + '</span>'
+    + '<span class="chip">' + (j.dispositivo === "movil" ? "Celular" : "Computadora") + '</span>'
+    + '<span class="chip">' + (j.chat ? "Chat activado" : "Sin chat") + '</span>'
+    + '<span class="chip">' + esc(nombreBloque(j.bloque_avatares)) + '</span>'
+    + (j.cierra_en ? '<span class="chip">Cierra ' + fmtFecha(j.cierra_en) + '</span>' : '<span class="chip">Sin cierre</span>')
+    + '</div></div>'
+    + '<div style="display:flex;gap:8px"><a class="btn suave mini" href="' + esc(urlJuego(j)) + '" target="_blank" rel="noopener">' + ICO.link + ' Abrir</a>'
+    + '<button class="btn peligro mini" id="del-juego">' + ICO.tacho + ' Borrar</button></div></div>'
+    + '<div class="url-box"><code>' + esc(urlJuego(j)) + '</code><button class="btn suave mini" id="copiar-url">' + ICO.copiar + ' Copiar enlace</button></div>'
+    + '<div class="tabs">'
+    + tabBtn("config", "Configuración")
+    + tabBtn("palabras", "Palabras <span class=\'cont\'>" + S.palabras.length + "</span>")
+    + tabBtn("parti", "Participación")
+    + '</div><div id="tab-cuerpo"></div></div>';
+  v.innerHTML = h;
+  $("#copiar-url").onclick = function () { copiar(urlJuego(j)); };
+  $("#del-juego").onclick = function () { confirmar("¿Borrar el pasapalabra «" + j.titulo + "»? Se borran también sus palabras y el registro de partidas.", "Borrar", function () {
+    espera(true); PPDB.del("pp_juegos", "id=eq." + j.id).then(function () {
+      S.juego = null; return cargarArbol();
+    }).then(pintarTodo).catch(function (e) { toast(errMsg(e)); }).then(function () { espera(false); });
+  }); };
+  pintarTab();
+}
+function tabBtn(t, txt) { return '<button class="tab' + (S.tab === t ? " sel" : "") + '" data-tab="' + t + '">' + txt + '</button>'; }
+function nombreBloque(n) { var b = PP_AVATARES.bloques.filter(function (x) { return x.n === n; })[0]; return b ? b.nombre : "Bloque " + n; }
+function fmtFecha(iso) { var d = new Date(iso); return d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }); }
+function copiar(t) {
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast("Enlace copiado"); });
+  else { var i = document.createElement("textarea"); i.value = t; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove(); toast("Enlace copiado"); }
+}
+function aLocal(iso) { if (!iso) return ""; var d = new Date(iso); function p(n) { return String(n).padStart(2, "0"); } return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()); }
+function deLocal(v) { return v ? new Date(v).toISOString() : null; }
+
+/* ============ tab: configuración ============ */
+function pintarTab() {
+  $$(".tab").forEach(function (b) { b.classList.toggle("sel", b.dataset.tab === S.tab); });
+  var c = $("#tab-cuerpo");
+  if (!c) return;
+  if (S.tab === "config") pintarConfig(c);
+  else if (S.tab === "palabras") pintarPalabras(c);
+  else pintarParti(c);
+}
+
+function pintarConfig(c) {
+  var j = S.juego;
+  var esMovil = j.dispositivo === "movil";
+  var modos = MODOS_PC.concat(MODOS_MOV).filter(function (m) { return true; });
+  var lista = esMovil ? MODOS_MOV : MODOS_PC;
+  var tSel = (j.tiempos && j.tiempos.opciones) || TIEMPOS.map(function (t) { return t[0]; });
+  var h = '<div class="fila2">'
+    + '<div><div class="campo"><label>Título (se lo ve arriba del juego)</label><input class="in" id="f-titulo" value="' + esc(j.titulo) + '"></div>'
+    + '<div class="campo"><label>Nombre de la URL <span class="ayuda">(no se puede repetir)</span></label><input class="in" id="f-slug" value="' + esc(j.slug) + '"></div>'
+    + '<fieldset class="sector"><legend>Dispositivo</legend><div class="dev">'
+    + '<label class="' + (!esMovil ? "on" : "") + '"><input type="radio" name="dev" value="pc" ' + (!esMovil ? "checked" : "") + ' hidden><b>Computadora</b><span>Rosco grande, chat lateral. Para cursos con PC.</span></label>'
+    + '<label class="' + (esMovil ? "on" : "") + '"><input type="radio" name="dev" value="movil" ' + (esMovil ? "checked" : "") + ' hidden><b>Celular</b><span>Pensado para pantalla chica y táctil.</span></label>'
+    + '</div><p class="ayuda">La estructura cambia: no es solo el tamaño, es otro diseño del mismo juego.</p></fieldset>'
+    + '<fieldset class="sector"><legend>Modos de juego permitidos</legend><div class="checks" id="f-modos">'
+    + lista.map(function (m) {
+      var on = !j.modos || j.modos[m[0]] !== false;
+      return '<label class="check' + (on ? " on" : "") + '"><input type="checkbox" data-modo="' + m[0] + '"' + (on ? " checked" : "") + ">" + m[1] + "</label>";
+    }).join("")
+    + '</div></fieldset>'
+    + '<fieldset class="sector"><legend>Tiempos que pueden elegir</legend><div class="checks" id="f-tiempos">'
+    + TIEMPOS.map(function (t) {
+      var on = tSel.indexOf(t[0]) >= 0;
+      return '<label class="check' + (on ? " on" : "") + '"><input type="checkbox" data-seg="' + t[0] + '"' + (on ? " checked" : "") + ">" + t[1] + "</label>";
+    }).join("")
+    + '</div><p class="ayuda">El estudiante elige entre estos tiempos al empezar. En el modo en línea el reloj corre por jugador.</p></fieldset>'
+    + '</div>'
+    + '<div><fieldset class="sector"><legend>Bloque de avatares</legend><div class="avs">'
+    + PP_AVATARES.bloques.map(function (b) {
+      var imgs = "";
+      for (var i = 0; i < PP_AVATARES.cantidad; i++) imgs += '<img src="' + PP_AVATARES.url(b.n, i) + '" alt="">';
+      return '<div class="avb' + (j.bloque_avatares === b.n ? " on" : "") + '" data-bloque="' + b.n + '"><div class="mini">' + imgs + "</div><b>" + esc(b.nombre) + '</b><span>Sugerido: ' + esc(b.sugerido) + "</span></div>";
+    }).join("")
+    + '</div></fieldset>'
+    + '<fieldset class="sector"><legend>Chat y plazo</legend>'
+    + '<div class="checks" style="margin-bottom:12px">'
+    + '<label class="check' + (j.chat ? " on" : "") + '"><input type="checkbox" id="f-chat"' + (j.chat ? " checked" : "") + ">Chat entre estudiantes</label>"
+    + '<label class="check' + (j.permitir_repaso ? " on" : "") + '"><input type="checkbox" id="f-repaso"' + (j.permitir_repaso ? " checked" : "") + ">Después del cierre, dejar repasar sin puntaje</label>"
+    + '<label class="check' + (j.activo ? " on" : "") + '"><input type="checkbox" id="f-activo"' + (j.activo ? " checked" : "") + ">Juego activo</label>"
+    + '</div><div class="fila2">'
+    + '<div class="campo"><label>Abre (opcional)</label><input class="in" type="datetime-local" id="f-abre" value="' + aLocal(j.abre_en) + '"></div>'
+    + '<div class="campo"><label>Cierra y se bloquea (opcional)</label><input class="in" type="datetime-local" id="f-cierra" value="' + aLocal(j.cierra_en) + '"></div>'
+    + '</div><p class="ayuda">Pasada la hora de cierre la base de datos rechaza las partidas: el bloqueo es real, no depende del reloj de la compu del estudiante.</p></fieldset>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="guardar">Guardar cambios</button>'
+    + '<button class="btn suave" id="guardar-y-abrir">Guardar y abrir el juego</button></div>'
+    + '</div></div>';
+  c.innerHTML = h;
+
+  $$(".check", c).forEach(function (l) { var i = $("input", l); i.addEventListener("change", function () { l.classList.toggle("on", i.checked); }); });
+  $$(".dev label", c).forEach(function (l) {
+    l.addEventListener("click", function () {
+      $$(".dev label", c).forEach(function (x) { x.classList.remove("on"); }); l.classList.add("on");
+      j.dispositivo = $("input", l).value; pintarConfig(c);
+    });
+  });
+  $$(".avb", c).forEach(function (b) {
+    b.addEventListener("click", function () {
+      $$(".avb", c).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); j.bloque_avatares = +b.dataset.bloque;
+    });
+  });
+  function leerForm() {
+    var m = {};
+    $$("#f-modos input", c).forEach(function (i) { m[i.dataset.modo] = i.checked; });
+    ["sola", "dedos", "boti", "linea"].forEach(function (k) { if (!(k in m)) m[k] = false; });
+    var t = $$("#f-tiempos input", c).filter(function (i) { return i.checked; }).map(function (i) { return +i.dataset.seg; });
+    return {
+      titulo: $("#f-titulo").value.trim() || j.titulo,
+      slug: slugDe($("#f-slug").value),
+      dispositivo: j.dispositivo,
+      modos: m,
+      tiempos: { opciones: t },
+      chat: $("#f-chat").checked,
+      permitir_repaso: $("#f-repaso").checked,
+      activo: $("#f-activo").checked,
+      abre_en: deLocal($("#f-abre").value),
+      cierra_en: deLocal($("#f-cierra").value),
+      bloque_avatares: j.bloque_avatares
+    };
+  }
+  function guardar(luego) {
+    var datos = leerForm();
+    if (!datos.tiempos.opciones.length) { toast("Dejá al menos un tiempo habilitado"); return; }
+    espera(true);
+    PPDB.upd("pp_juegos", "id=eq." + j.id, datos).then(function (rs) {
+      S.juego = Object.assign(j, rs && rs[0] ? rs[0] : datos);
+      return cargarArbol();
+    }).then(function () { pintarTodo(); toast("Guardado"); if (luego === "abrir") window.open(urlJuego(S.juego), "_blank"); })
+      .catch(function (e) { toast(errMsg(e)); }).then(function () { espera(false); });
+  }
+  $("#guardar").onclick = function () { guardar(); };
+  $("#guardar-y-abrir").onclick = function () { guardar("abrir"); };
+}
+
+/* ============ tab: palabras ============ */
+function pintarPalabras(c) {
+  var porLetra = {};
+  LETRAS.forEach(function (l) { porLetra[l] = []; });
+  S.palabras.forEach(function (p) { if (porLetra[p.letra]) porLetra[p.letra].push(p); });
+  var vacias = LETRAS.filter(function (l) { return !porLetra[l].length; });
+
+  var h = '<div class="pal-cab">'
+    + '<button class="btn tur mini" id="importar">' + ICO.mas + ' Pegar lista de palabras</button>'
+    + '<button class="btn mini" id="guardar-pal">Guardar palabras</button>'
+    + '<span style="margin-left:auto;font-size:13px;color:var(--gris);font-weight:700">' + S.palabras.length + ' palabras · ' + (LETRAS.length - vacias.length) + '/' + LETRAS.length + ' letras con palabra</span></div>';
+  if (vacias.length) h += '<div class="aviso warn">' + alertIco() + '<div>Faltan palabras en estas letras: <b>' + vacias.join(" · ") + '</b>. El rosco se arma solo con las letras que tengan al menos una.</div></div>';
+  h += '<div class="letras">';
+  LETRAS.forEach(function (l) {
+    h += '<div class="letra' + (porLetra[l].length ? "" : " vacia") + '" data-letra="' + l + '"><div class="cab"><span class="L">' + l + '</span>'
+      + '<span class="cnt">' + porLetra[l].length + ' palabra' + (porLetra[l].length === 1 ? "" : "s") + '</span>'
+      + '<button class="ibtn" data-add="' + l + '" title="Agregar palabra">' + ICO.mas + '</button></div>';
+    porLetra[l].forEach(function (p) { h += filaPal(p); });
+    h += '</div>';
+  });
+  h += '</div>';
+  c.innerHTML = h;
+
+  $$("[data-add]", c).forEach(function (b) { b.onclick = function () { agregarPal(b.dataset.add); }; });
+  $$(".pal", c).forEach(function (div) {
+    var id = div.dataset.id, p = buscarPal(id);
+    if (!p) return;
+    $("input[data-f=palabra]", div).addEventListener("change", function (e) { p.palabra = e.target.value.toUpperCase(); e.target.value = p.palabra; syncModo(div, p); });
+    $("select", div).addEventListener("change", function (e) { p.modo = e.target.value; });
+    $("input[data-f=pista]", div).addEventListener("change", function (e) { p.pista = e.target.value; });
+    $("input[data-f=variantes]", div).addEventListener("change", function (e) { p.variantes = e.target.value.split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean); });
+    $("textarea", div).addEventListener("change", function (e) { p.definicion = e.target.value; });
+    $(".ibtn.del", div).addEventListener("click", function () { borrarPal(id, div); });
+  });
+  $("#guardar-pal").onclick = guardarPalabras;
+  $("#importar").onclick = modalImportar;
+}
+function alertIco() { return '<svg class="ic" viewBox="0 0 24 24" style="flex:none;margin-top:1px"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'; }
+function filaPal(p) {
+  return '<div class="pal" data-id="' + p._id + '"><div class="f1">'
+    + '<select data-f="modo"><option value="empieza"' + (p.modo === "empieza" ? " selected" : "") + '>Empieza</option><option value="contiene"' + (p.modo === "contiene" ? " selected" : "") + ">Contiene</option></select>"
+    + '<input type="text" data-f="palabra" value="' + esc(p.palabra) + '" placeholder="PALABRA">'
+    + '<button class="ibtn del" title="Quitar">' + ICO.tacho + '</button></div>'
+    + '<div class="f2"><input type="text" data-f="pista" value="' + esc(p.pista || "") + '" placeholder="Pista corta (opcional)">'
+    + '<input type="text" data-f="variantes" value="' + esc((p.variantes || []).join(", ")) + '" placeholder="Variantes aceptadas, coma"></div>'
+    + '<textarea data-f="definicion" placeholder="Definición que lee el estudiante">' + esc(p.definicion || "") + "</textarea></div>";
+}
+function buscarPal(id) {
+  for (var i = 0; i < S.palabras.length; i++) if (String(S.palabras[i]._id) === String(id)) return S.palabras[i];
+  return null;
+}
+function syncModo(div, p) {
+  var ok = (p.palabra || "").charAt(0).toUpperCase() === p.letra;
+  if (!ok && p.modo === "empieza") { p.modo = "contiene"; $("select", div).value = "contiene"; toast(p.palabra + " no empieza con " + p.letra + ": quedó como «Contiene»"); }
+}
+var _seq = 0;
+function agregarPal(letra) {
+  var p = { _id: "n" + (++_seq), letra: letra, modo: "empieza", palabra: "", variantes: [], pista: "", definicion: "" };
+  S.palabras.push(p);
+  var cont = $('.letra[data-letra="' + letra + '"]');
+  cont.classList.remove("vacia");
+  cont.insertAdjacentHTML("beforeend", filaPal(p));
+  $(".cnt", cont).textContent = cont.querySelectorAll(".pal").length + " palabra" + (cont.querySelectorAll(".pal").length === 1 ? "" : "s");
+  var div = cont.lastElementChild;
+  $("input[data-f=palabra]", div).focus();
+  /* enlazar eventos de la fila nueva */
+  $("input[data-f=palabra]", div).addEventListener("change", function (e) { p.palabra = e.target.value.toUpperCase(); e.target.value = p.palabra; syncModo(div, p); });
+  $("select", div).addEventListener("change", function (e) { p.modo = e.target.value; });
+  $("input[data-f=pista]", div).addEventListener("change", function (e) { p.pista = e.target.value; });
+  $("input[data-f=variantes]", div).addEventListener("change", function (e) { p.variantes = e.target.value.split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean); });
+  $("textarea", div).addEventListener("change", function (e) { p.definicion = e.target.value; });
+  $(".ibtn.del", div).addEventListener("click", function () { borrarPal(p._id, div); });
+}
+function borrarPal(id, div) {
+  if (String(id).charAt(0) !== "n") S.palabrasBorradas.push(id);
+  S.palabras = S.palabras.filter(function (p) { return String(p._id) !== String(id); });
+  var letra = div.closest(".letra");
+  div.remove();
+  var n = letra.querySelectorAll(".pal").length;
+  $(".cnt", letra).textContent = n + " palabra" + (n === 1 ? "" : "s");
+  if (!n) letra.classList.add("vacia");
+}
+function guardarPalabras() {
+  var nuevas = S.palabras.filter(function (p) { return String(p._id).charAt(0) === "n"; });
+  var viejas = S.palabras.filter(function (p) { return String(p._id).charAt(0) !== "n"; });
+  var malas = S.palabras.filter(function (p) { return !p.palabra || !p.definicion; });
+  if (malas.length) { toast("Hay " + malas.length + " palabra(s) sin palabra o sin definición"); return; }
+  espera(true);
+  var trabajo = Promise.resolve();
+  if (S.palabrasBorradas.length) {
+    trabajo = trabajo.then(function () { return PPDB.del("pp_palabras", "id=in.(" + S.palabrasBorradas.join(",") + ")"); });
+  }
+  viejas.forEach(function (p) {
+    trabajo = trabajo.then(function () {
+      return PPDB.upd("pp_palabras", "id=eq." + p._id, { letra: p.letra, modo: p.modo, palabra: p.palabra, variantes: p.variantes || [], pista: p.pista || "", definicion: p.definicion });
+    });
+  });
+  if (nuevas.length) {
+    trabajo = trabajo.then(function () {
+      return PPDB.ins("pp_palabras", nuevas.map(function (p) {
+        return { juego_id: S.juego.id, letra: p.letra, modo: p.modo, palabra: p.palabra, variantes: p.variantes || [], pista: p.pista || "", definicion: p.definicion };
+      }));
+    });
+  }
+  trabajo.then(function () { return cargarJuego(S.juego.id); }).then(pintarTodo)
+    .then(function () { toast("Palabras guardadas"); })
+    .catch(function (e) { toast(errMsg(e)); }).then(function () { espera(false); });
+}
+function modalImportar() {
+  modal('<h2>Pegar lista de palabras</h2>'
+    + '<p class="ayuda" style="margin-bottom:10px">Una por línea, con este formato:<br><code>LETRA | PALABRA | definición</code> — la pista y las variantes son opcionales: <code>LETRA | PALABRA | definición | pista | var1, var2</code>.<br>Si la palabra no empieza con la letra se marca «Contiene» automáticamente.</p>'
+    + '<textarea class="in" id="imp-txt" style="min-height:190px" placeholder="A | ADN | Molécula que guarda la información hereditaria\nB | BIODIVERSIDAD | Variedad de seres vivos de un lugar\nC | CÉLULA | Unidad básica de los seres vivos"></textarea>'
+    + '<div class="acciones"><button class="btn suave" id="m-cancel">Cancelar</button><button class="btn tur" id="m-ok">Agregar a la lista</button></div>');
+  $("#m-cancel").onclick = cerrarModal;
+  $("#m-ok").onclick = function () {
+    var lineas = $("#imp-txt").value.split("\n"), n = 0, saltadas = 0;
+    lineas.forEach(function (ln) {
+      var partes = ln.split("|").map(function (s) { return s.trim(); });
+      if (partes.length < 3 || !partes[0] || !partes[1]) { if (ln.trim()) saltadas++; return; }
+      var letra = partes[0].toUpperCase().charAt(0);
+      if (LETRAS.indexOf(letra) < 0) { saltadas++; return; }
+      var pal = partes[1].toUpperCase();
+      S.palabras.push({
+        _id: "n" + (++_seq), letra: letra,
+        modo: pal.charAt(0) === letra ? "empieza" : "contiene",
+        palabra: pal, definicion: partes[2] || "", pista: partes[3] || "",
+        variantes: partes[4] ? partes[4].split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean) : []
+      });
+      n++;
+    });
+    cerrarModal(); pintarTab();
+    toast(n + " palabras agregadas" + (saltadas ? " (" + saltadas + " líneas no entendidas)" : ""));
+  };
+}
+
+/* ============ tab: participación ============ */
+function pintarParti(c) {
+  c.innerHTML = '<p class="ayuda">Cargando partidas…</p>';
+  PPDB.sel("pp_partidas", "juego_id=eq." + S.juego.id + "&order=creado_en.desc&limit=5000").then(function (rs) {
+    S.partidas = rs || [];
+    var porAlu = {}, fall = {}, aciertosT = 0;
+    S.partidas.forEach(function (p) {
+      var k = p.nombre + "|" + (p.curso_txt || "");
+      if (!porAlu[k]) porAlu[k] = { nombre: p.nombre, seccion: p.curso_txt, avatar: p.avatar, partidas: 0, aciertos: 0, mejor: 0, ultima: p.creado_en };
+      var a = porAlu[k]; a.partidas++; a.aciertos += p.aciertos || 0; if ((p.puntaje || 0) > a.mejor) a.mejor = p.puntaje;
+      aciertosT += p.aciertos || 0;
+      (p.falladas || []).forEach(function (w) { fall[w] = (fall[w] || 0) + 1; });
+    });
+    var alu = Object.keys(porAlu).map(function (k) { return porAlu[k]; }).sort(function (a, b) { return b.aciertos - a.aciertos; });
+    var top = Object.keys(fall).sort(function (a, b) { return fall[b] - fall[a]; }).slice(0, 12);
+    var prom = S.partidas.length ? Math.round(aciertosT / S.partidas.length * 10) / 10 : 0;
+
+    var h = '<div class="stats">'
+      + '<div class="stat"><b>' + alu.length + '</b><span>estudiantes jugaron</span></div>'
+      + '<div class="stat"><b>' + S.partidas.length + '</b><span>partidas en total</span></div>'
+      + '<div class="stat"><b>' + prom + '</b><span>aciertos por partida</span></div>'
+      + '<div class="stat"><b>' + (alu.length ? alu[0].aciertos : 0) + '</b><span>mejor acumulado</span></div></div>'
+      + '<div style="display:flex;gap:10px;margin-bottom:14px"><button class="btn suave mini" id="csv">' + ICO.descarga + ' Exportar CSV</button></div>'
+      + '<h3 class="baloo" style="margin-bottom:8px">Ranking del curso</h3>';
+    if (!alu.length) h += '<p class="ayuda">Todavía no jugó nadie. Compartí el enlace del juego para que empiecen.</p>';
+    else {
+      h += '<table class="tabla"><thead><tr><th></th><th>Estudiante</th><th>Partidas</th><th>Aciertos</th><th>Mejor puntaje</th><th>Última vez</th></tr></thead><tbody>';
+      alu.forEach(function (a, i) {
+        h += '<tr><td><span class="pos' + (i < 3 ? " p" + (i + 1) : "") + '">' + (i + 1) + '</span></td>'
+          + '<td>' + (typeof a.avatar === "number" ? '<img class="avt" src="' + esc(a.avatar >= PP_AVATARES.cantidad ? PP_AVATARES.boti : PP_AVATARES.url(S.juego.bloque_avatares, a.avatar)) + '">' : "") + '<b>' + esc(a.nombre) + '</b>' + (a.seccion ? ' <span style="color:var(--gris);font-size:12.5px">· ' + esc(a.seccion) + "</span>" : "") + '</td>'
+          + "<td>" + a.partidas + "</td><td><b>" + a.aciertos + "</b></td><td>" + a.mejor + "</td><td>" + fmtFecha(a.ultima) + "</td></tr>";
+      });
+      h += "</tbody></table>";
+    }
+    if (top.length) {
+      h += '<h3 class="baloo" style="margin:20px 0 8px">Palabras que más les cuestan</h3><div class="checks">';
+      top.forEach(function (w) { h += '<span class="chip">' + esc(w) + ' <b style="color:var(--parina)">' + fall[w] + "×</b></span>"; });
+      h += "</div>";
+    }
+    c.innerHTML = h;
+    $("#csv").onclick = exportarCSV;
+  }).catch(function (e) { c.innerHTML = '<div class="aviso mal">' + alertIco() + '<div>No pude leer las partidas: ' + esc(errMsg(e)) + "</div></div>"; });
+}
+function exportarCSV() {
+  var filas = [["fecha", "nombre", "seccion", "modo", "aciertos", "errores", "pasadas", "puntaje", "tiempo_seg", "falladas"]];
+  S.partidas.forEach(function (p) {
+    filas.push([p.creado_en, p.nombre, p.curso_txt || "", p.modo || "", p.aciertos, p.errores, p.pasadas, p.puntaje, p.tiempo_seg, (p.falladas || []).join(" ")]);
+  });
+  var csv = filas.map(function (f) { return f.map(function (x) { return '"' + String(x == null ? "" : x).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "participacion-" + S.juego.slug + ".csv"; a.click();
+}
+
+/* ============ modales de alta/edición ============ */
+function modal(html) {
+  var m = $("#modal"); m.innerHTML = '<div class="caja">' + html + "</div>"; m.classList.add("abierto");
+}
+function cerrarModal() { var m = $("#modal"); m.classList.remove("abierto"); m.innerHTML = ""; }
+function confirmar(txt, okTxt, fn) {
+  modal('<h2>¿Segura?</h2><p style="color:var(--suave)">' + esc(txt) + '</p><div class="acciones"><button class="btn suave" id="m-cancel">Cancelar</button><button class="btn peligro" id="m-ok">' + esc(okTxt) + "</button></div>");
+  $("#m-cancel").onclick = cerrarModal;
+  $("#m-ok").onclick = function () { cerrarModal(); fn(); };
+}
+function pedirDos(titulo, l1, l2, fn) {
+  modal("<h2>" + esc(titulo) + '</h2><div class="campo"><label>' + esc(l1) + '</label><input class="in" id="m-i1"></div>'
+    + '<div class="campo"><label>' + esc(l2) + ' <span style="font-weight:400">(opcional)</span></label><input class="in" id="m-i2"></div>'
+    + '<div class="acciones"><button class="btn suave" id="m-cancel">Cancelar</button><button class="btn" id="m-ok">Crear</button></div>');
+  $("#m-cancel").onclick = cerrarModal;
+  $("#m-ok").onclick = function () {
+    var v1 = $("#m-i1").value.trim(); if (!v1) { $("#m-i1").focus(); return; }
+    var v2 = $("#m-i2").value.trim(); cerrarModal(); fn(v1, v2);
+  };
+  $("#m-i1").focus();
+}
+function pedirUno(titulo, l1, val, fn) {
+  modal("<h2>" + esc(titulo) + '</h2><div class="campo"><label>' + esc(l1) + '</label><input class="in" id="m-i1" value="' + esc(val || "") + '"></div>'
+    + '<div class="acciones"><button class="btn suave" id="m-cancel">Cancelar</button><button class="btn" id="m-ok">Guardar</button></div>');
+  $("#m-cancel").onclick = cerrarModal;
+  $("#m-ok").onclick = function () { var v = $("#m-i1").value.trim(); if (!v) return; cerrarModal(); fn(v); };
+  $("#m-i1").focus();
+}
+function nuevoJuego(cursoId) {
+  var curso = null, materia = null;
+  S.materias.forEach(function (m) { (m.cursos || []).forEach(function (c) { if (c.id === cursoId) { curso = c; materia = m; } }); });
+  if (!curso) return;
+  var tituloSug = "Pasapalabra · " + materia.nombre + " · " + curso.nombre + (curso.colegio ? " · " + curso.colegio : "");
+  modal('<h2>Nuevo pasapalabra</h2>'
+    + '<p class="ayuda" style="margin-bottom:12px">Para <b>' + esc(materia.nombre) + " · " + esc(curso.nombre) + (curso.colegio ? " · " + esc(curso.colegio) : "") + '</b>. Después lo configurás con sus palabras, tiempos, avatares y plazo.</p>'
+    + '<div class="campo"><label>Título</label><input class="in" id="m-tit" value="' + esc(tituloSug) + '"></div>'
+    + '<div class="campo"><label>URL</label><input class="in" id="m-slug" value="' + esc(slugDe(materia.nombre + "-" + curso.nombre)) + '"></div>'
+    + '<div class="fila2"><fieldset class="sector"><legend>Dispositivo</legend><div class="dev">'
+    + '<label class="on"><input type="radio" name="ndev" value="pc" checked hidden><b>Computadora</b></label>'
+    + '<label><input type="radio" name="ndev" value="movil" hidden><b>Celular</b></label></div></fieldset></div>'
+    + '<div class="acciones"><button class="btn suave" id="m-cancel">Cancelar</button><button class="btn tur" id="m-ok">Crear</button></div>');
+  $$("#modal .dev label").forEach(function (l) { l.onclick = function () { $$("#modal .dev label").forEach(function (x) { x.classList.remove("on"); }); l.classList.add("on"); }; });
+  $("#m-cancel").onclick = cerrarModal;
+  $("#m-tit").addEventListener("input", function () { $("#m-slug").value = slugDe(materia.nombre + "-" + curso.nombre + "-" + $("#m-tit").value.replace(/^pasapalabra\s*·?\s*/i, "")); });
+  $("#m-ok").onclick = function () {
+    var fila = {
+      curso_id: cursoId,
+      titulo: $("#m-tit").value.trim() || tituloSug,
+      slug: slugDe($("#m-slug").value),
+      dispositivo: $("#modal input[name=ndev]:checked").value,
+      chat: false, bloque_avatares: 1,
+      modos: { sola: true, dedos: true, boti: true, linea: true },
+      tiempos: { opciones: [240, 360, 480, 600, 0] },
+      permitir_repaso: true, activo: true
+    };
+    espera(true);
+    PPDB.ins("pp_juegos", fila).then(function (rs) {
+      return cargarArbol().then(function () { return cargarJuego(rs[0].id); });
+    }).then(pintarTodo).then(function () { toast("Pasapalabra creado — ahora cargá las palabras"); S.tab = "palabras"; pintarVista(); })
+      .catch(function (e) { toast(errMsg(e).indexOf("duplicate") >= 0 || errMsg(e).indexOf("23505") >= 0 ? "Ya existe un pasapalabra con esa URL: cambiala" : errMsg(e)); })
+      .then(function () { espera(false); });
+  };
+  $("#m-tit").focus();
+}
+
+/* ============ eventos del árbol ============ */
+$("#arbol").addEventListener("click", function (e) {
+  var t = e.target;
+  var tog = t.closest("[data-tog]");
+  if (tog) { var n = tog.closest(".nodo"); n.classList.toggle("cerrado"); var key = n.dataset.m ? "m" + n.dataset.m : "c" + n.dataset.c; S.abiertos[key] = !n.classList.contains("cerrado"); return; }
+  var jn = t.closest("[data-juego]");
+  if (jn) { espera(true); cargarJuego(jn.dataset.juego).then(function () { S.tab = "config"; pintarVista(); }).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); return; }
+  var b;
+  if (t.closest("#mas-materia")) { pedirUno("Nueva materia", "Nombre (ej.: Biología)", "", function (v) { espera(true); PPDB.ins("pp_materias", { nombre: v }).then(cargarArbol).then(pintarArbol).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); return; }
+  if ((b = t.closest("[data-mas-curso]"))) { var mid = b.dataset.masCurso; pedirDos("Nuevo curso", "Curso (ej.: 2° A)", "Colegio", function (nom, col) { espera(true); PPDB.ins("pp_cursos", { materia_id: mid, nombre: nom, colegio: col }).then(cargarArbol).then(pintarArbol).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); return; }
+  if ((b = t.closest("[data-mas-juego]"))) { nuevoJuego(b.dataset.masJuego); return; }
+  if ((b = t.closest("[data-ed-materia]"))) { var m2 = S.materias.filter(function (x) { return x.id === b.dataset.edMateria; })[0]; pedirUno("Renombrar materia", "Nombre", m2.nombre, function (v) { espera(true); PPDB.upd("pp_materias", "id=eq." + m2.id, { nombre: v }).then(cargarArbol).then(pintarArbol).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); return; }
+  if ((b = t.closest("[data-ed-curso]"))) { var cc = null; S.materias.forEach(function (m3) { (m3.cursos || []).forEach(function (x) { if (x.id === b.dataset.edCurso) cc = x; }); }); pedirDos("Editar curso", "Curso", "Colegio", function (nom, col) { espera(true); PPDB.upd("pp_cursos", "id=eq." + cc.id, { nombre: nom, colegio: col }).then(cargarArbol).then(pintarArbol).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); $("#modal #m-i1").value = cc.nombre; $("#modal #m-i2").value = cc.colegio || ""; return; }
+  if ((b = t.closest("[data-del-materia]"))) { var m4 = S.materias.filter(function (x) { return x.id === b.dataset.delMateria; })[0]; confirmar("Borrar la materia «" + m4.nombre + "» borra también sus cursos, juegos, palabras y partidas.", "Borrar todo", function () { espera(true); PPDB.del("pp_materias", "id=eq." + m4.id).then(function () { S.juego = null; return cargarArbol(); }).then(pintarTodo).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); return; }
+  if ((b = t.closest("[data-del-curso]"))) { var cid = b.dataset.delCurso; confirmar("Borrar el curso borra también sus pasapalabras, palabras y partidas.", "Borrar todo", function () { espera(true); PPDB.del("pp_cursos", "id=eq." + cid).then(function () { S.juego = null; return cargarArbol(); }).then(pintarTodo).catch(function (e2) { toast(errMsg(e2)); }).then(function () { espera(false); }); }); return; }
+});
+document.addEventListener("click", function (e) {
+  var t = e.target.closest(".tab");
+  if (t) { S.tab = t.dataset.tab; pintarTab(); }
+});
+$("#modal").addEventListener("click", function (e) { if (e.target.id === "modal") cerrarModal(); });
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarModal(); });
+
+/* ============ arranque ============ */
+function pintarTodo() { pintarArbol(); pintarVista(); }
+function entrarUI() {
+  $("#login").hidden = true; $("#app").hidden = false;
+  var s = PPDB.sesion(); $("#quien").textContent = s && s.email ? s.email : "";
+  espera(true);
+  cargarArbol().then(pintarTodo).catch(function (e) { toast(errMsg(e)); }).then(function () { espera(false); });
+}
+$("#btn-salir").onclick = function () { PPDB.salir(); location.reload(); };
+$("#l-btn").onclick = function () {
+  var b = this; b.disabled = true; $("#l-err").hidden = true;
+  PPDB.entrar($("#l-email").value.trim(), $("#l-pass").value).then(entrarUI).catch(function (e) {
+    $("#l-err").textContent = "No se pudo entrar: " + errMsg(e); $("#l-err").hidden = false;
+  }).then(function () { b.disabled = false; });
+};
+$("#l-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") $("#l-btn").click(); });
+
+if (PPDB.sesion()) entrarUI(); else { $("#login").hidden = false; }
+</script>
+</body>
+</html>

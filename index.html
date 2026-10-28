@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pasapalabra</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{display:grid;place-items:center;background:#0e1230;color:#fff;font-family:system-ui,sans-serif}
+  .letras{display:flex;justify-content:center;gap:7px;margin-bottom:18px}
+  .letras b{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:#081018;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);animation:rebote 1.2s ease-in-out infinite}
+  .letras b:nth-child(2n){animation-delay:.12s}.letras b:nth-child(3n){animation-delay:.24s}.letras b:nth-child(4n){animation-delay:.36s}
+  @keyframes rebote{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  p{color:#c4c9f0;font-size:15px;text-align:center}
+</style>
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+</head>
+<body>
+<div>
+  <div class="letras" id="letras"></div>
+  <p id="txt">Preparando el rosco…</p>
+</div>
+<script>
+  var L = "PASAPALABRA".split("");
+  document.getElementById("letras").innerHTML = L.map(function (l, i) {
+    return '<b style="background:hsl(' + (170 + i * 22) + ' 80% 55%)">' + l + "</b>";
+  }).join("");
+
+  var slug = new URLSearchParams(location.search).get("j");
+  var q = slug ? "?j=" + encodeURIComponent(slug) : "";
+  function error(t) { document.getElementById("txt").textContent = t; document.getElementById("letras").style.display = "none"; }
+
+  if (!slug) error("Falta el enlace del juego: pedile a tu profe el enlace completo.");
+  else {
+    var cache = null;
+    try { cache = JSON.parse(sessionStorage.getItem("ppm-cfg-" + slug) || "null"); } catch (e) {}
+    (cache ? Promise.resolve(cache) : PPDB.juegoPorSlug(slug).then(function (j) {
+      if (j) try { sessionStorage.setItem("ppm-cfg-" + slug, JSON.stringify(j)); } catch (e) {}
+      return j;
+    })).then(function (j) {
+      var destino = (j && j.dispositivo === "movil") ? "movil.html" : "pc.html";
+      location.replace(destino + q);
+    }).catch(function () {
+      // si no hay conexión igual probamos abrir el juego (puede tener el rosco en caché)
+      location.replace("pc.html" + q);
+    });
+  }
+</script>
+</body>
+</html>
